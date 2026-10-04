@@ -12,7 +12,20 @@ const ROLES: Role[] = [
 
 type GameChangeListener = (
     gameId: string,
+    event: GameChangeEvent,
 ) => void;
+
+export type GameChangeEvent =
+    | {
+    type: 'player-joined';
+}
+    | {
+    type: 'order-placed';
+    orders: Partial<Record<Role, number>>;
+}
+    | {
+    type: 'round-played';
+};
 
 const createInitialState = (): GameState => ({
     round: 0,
@@ -97,9 +110,12 @@ export class GameService {
         };
     }
 
-    notifyGameChanged(gameId: string): void {
+    notifyGameChanged(
+        gameId: string,
+        event: GameChangeEvent,
+    ): void {
         for (const listener of this.listeners) {
-            listener(gameId);
+            listener(gameId, event);
         }
     }
 }

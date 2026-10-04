@@ -24,6 +24,24 @@ export class GameWebSocket {
     ) {
         this.registerUpgrade();
         this.registerConnections();
+        this.gameService.onGameChanged(
+            (gameId, event) => {
+                this.broadcast(gameId, {
+                    type: event.type,
+                    state: this.gameService
+                        .getGame(gameId)
+                        ?.getState(),
+                    players: this.gameService
+                        .getGame(gameId)
+                        ?.getPlayers(),
+                    ...(event.type === 'order-placed'
+                        ? {
+                            orders: event.orders,
+                        }
+                        : {}),
+                });
+            },
+        );
     }
 
     private registerUpgrade(): void {

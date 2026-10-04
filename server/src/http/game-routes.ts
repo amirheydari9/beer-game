@@ -135,6 +135,13 @@ export async function registerGameRoutes(
 
         game.join(role);
 
+        gameService.notifyGameChanged(
+            game.id,
+            {
+                type: 'player-joined',
+            },
+        );
+
         return {
             gameId: game.id,
             role,
@@ -190,6 +197,14 @@ export async function registerGameRoutes(
         game.placeOrder(role, quantity);
 
         if (!game.hasAllOrders()) {
+            gameService.notifyGameChanged(
+                game.id,
+                {
+                    type: 'order-placed',
+                    orders: game.getPendingOrders(),
+                },
+            );
+
             return {
                 gameId: game.id,
                 role,
@@ -203,6 +218,12 @@ export async function registerGameRoutes(
             game.getState().round < 4 ? 4 : 8,
         );
 
+        gameService.notifyGameChanged(
+            game.id,
+            {
+                type: 'round-played',
+            },
+        );
         return {
             gameId: game.id,
             role,
