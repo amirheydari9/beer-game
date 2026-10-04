@@ -73,6 +73,20 @@ export async function registerGameRoutes(
     app: FastifyInstance,
     gameService: GameService,
 ): Promise<void> {
+
+
+    app.get('/games', async () => {
+        const games = gameService.listGames();
+
+        return {
+            games: games.map((game) => ({
+                id: game.id,
+                round: game.getState().round,
+                players: game.getPlayers(),
+            })),
+        };
+    });
+
     app.post('/games', async () => {
         const game = gameService.createGame();
 

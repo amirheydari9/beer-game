@@ -369,4 +369,39 @@ describe('Game routes', () => {
             error: 'Order already placed for this round',
         });
     });
+
+    it('lists games', async () => {
+        const firstGame = gameService.createGame();
+        const secondGame = gameService.createGame();
+
+        const response = await app.inject({
+            method: 'GET',
+            url: '/games',
+        });
+
+        expect(response.statusCode).toBe(200);
+
+        const body = response.json() as {
+            games: Array<{
+                id: string;
+                round: number;
+                players: string[];
+            }>;
+        };
+
+        expect(body.games).toEqual(
+            expect.arrayContaining([
+                {
+                    id: firstGame.id,
+                    round: 0,
+                    players: [],
+                },
+                {
+                    id: secondGame.id,
+                    round: 0,
+                    players: [],
+                },
+            ]),
+        );
+    });
 });
