@@ -142,6 +142,77 @@ export async function registerGameRoutes(
         };
     });
 
+
+    app.post<{
+        Params: {
+            id: string;
+        };
+        Body: {
+            role: unknown;
+            quantity: unknown;
+        };
+    }>('/games/:id/orders', async (request, reply) => {
+        const game = gameService.getGame(request.params.id);
+
+        if (!game) {
+            return reply.code(404).send({
+                error: 'Game not found',
+            });
+        }
+
+        const role = request.body?.role;
+        const quantity = request.body?.quantity;
+
+        if (!isRole(role)) {
+            return reply.code(400).send({
+                error: 'Invalid role',
+            });
+        }
+
+        if (!isNonNegativeInteger(quantity)) {
+            return reply.code(400).send({
+                error: 'Invalid order quantity',
+            });
+        }
+
+        if (!game.hasPlayer(role)) {
+            return reply.code(400).send({
+                error: 'Player has not joined the game',
+            });
+        }
+
+        if (game.hasOrder(role)) {
+            return reply.code(409).send({
+                error: 'Order already placed for this round',
+            });
+        }
+
+        game.placeOrder(role, quantity);
+
+        if (!game.hasAllOrders()) {
+            return {
+                gameId: game.id,
+                role,
+                quantity,
+                orders: game.getPendingOrders(),
+                allOrdersPlaced: false,
+            };
+        }
+
+        const result = game.playPendingRound(
+            game.getState().round < 4 ? 4 : 8,
+        );
+
+        return {
+            gameId: game.id,
+            role,
+            quantity,
+            allOrdersPlaced: true,
+            round: result,
+        };
+    });
+
+
     app.post<{
         Params: {
             id: string;
