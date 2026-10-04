@@ -32,6 +32,7 @@ interface PlayerRow {
 }
 
 export class GameRepository {
+
     constructor(
         private readonly database: AppDatabase,
     ) {}
@@ -70,6 +71,7 @@ export class GameRepository {
     ): void {
         const transaction =
             this.database.db.transaction(() => {
+
                 this.database.db
                     .prepare(`
                         INSERT INTO games (
@@ -103,18 +105,14 @@ export class GameRepository {
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         ON CONFLICT(game_id, role)
                         DO UPDATE SET
-                            inventory =
-                                excluded.inventory,
-                            backlog =
-                                excluded.backlog,
+                            inventory = excluded.inventory,
+                            backlog = excluded.backlog,
                             shipments_in_transit =
                                 excluded.shipments_in_transit,
                             last_order_placed =
                                 excluded.last_order_placed,
-                            total_cost =
-                                excluded.total_cost,
-                            joined =
-                                excluded.joined
+                            total_cost = excluded.total_cost,
+                            joined = excluded.joined
                     `);
 
                 for (const role of ROLES) {
@@ -130,7 +128,7 @@ export class GameRepository {
                         ),
                         player.lastOrderPlaced,
                         player.totalCost,
-                        0,
+                        player.joined ? 1 : 0,
                     );
                 }
             });
@@ -141,6 +139,7 @@ export class GameRepository {
     findById(
         id: string,
     ): GameState | undefined {
+
         const game = this.database.db
             .prepare(`
                 SELECT
@@ -178,6 +177,7 @@ export class GameRepository {
         for (const player of players) {
             playerState[player.role] = {
                 role: player.role,
+                joined: player.joined === 1,
                 inventory: player.inventory,
                 backlog: player.backlog,
                 shipmentsInTransit:

@@ -19,6 +19,7 @@ const createState = (): GameState => ({
             shipmentsInTransit: [4, 6],
             lastOrderPlaced: 5,
             totalCost: 14,
+            joined: false,
         },
         wholesaler: {
             role: 'wholesaler',
@@ -27,6 +28,7 @@ const createState = (): GameState => ({
             shipmentsInTransit: [3, 5],
             lastOrderPlaced: 4,
             totalCost: 20,
+            joined: false,
         },
         distributor: {
             role: 'distributor',
@@ -35,6 +37,7 @@ const createState = (): GameState => ({
             shipmentsInTransit: [4, 4],
             lastOrderPlaced: 4,
             totalCost: 18,
+            joined: false,
         },
         factory: {
             role: 'factory',
@@ -43,6 +46,7 @@ const createState = (): GameState => ({
             shipmentsInTransit: [4, 7],
             lastOrderPlaced: 6,
             totalCost: 21,
+            joined: false,
         },
     },
 });
