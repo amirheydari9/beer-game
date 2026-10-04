@@ -137,7 +137,28 @@ export class GameService {
     }
 
     listGames(): GameSession[] {
-        return [...this.sessions.values()];
+        const games = this.repository.findAll();
+
+        return games.map(({id, state}) => {
+            const existing =
+                this.sessions.get(id);
+
+            if (existing) {
+                return existing;
+            }
+
+            const session = new GameSession(
+                id,
+                state,
+            );
+
+            this.sessions.set(
+                id,
+                session,
+            );
+
+            return session;
+        });
     }
 
     getRoles(): Role[] {

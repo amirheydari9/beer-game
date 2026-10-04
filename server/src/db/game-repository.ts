@@ -31,6 +31,35 @@ export class GameRepository {
         private readonly database: AppDatabase,
     ) {}
 
+
+    findAll(): Array<{
+        id: string;
+        state: GameState;
+    }> {
+        const games = this.database.db
+            .prepare(`
+            SELECT id
+            FROM games
+            ORDER BY created_at ASC
+        `)
+            .all() as Array<{
+            id: string;
+        }>;
+
+        return games.flatMap((game) => {
+            const state = this.findById(game.id);
+
+            if (!state) {
+                return [];
+            }
+
+            return [{
+                id: game.id,
+                state,
+            }];
+        });
+    }
+
     save(
         id: string,
         state: GameState,
