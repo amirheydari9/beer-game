@@ -7,9 +7,11 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "echo 'TODO: start the server and the client for local development' && exit 1",
-    "build": "echo 'TODO: produce a production build' && exit 1",
-    "start": "echo 'TODO: run the production build' && exit 1",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "tsx server/src/index.ts",
+    "dev:client": "vite --config client/vite.config.ts",
+    "build": "tsc -p server/tsconfig.json && vite build --config client/vite.config.ts",
+    "start": "node dist/server/src/index.js",
     "test": "vitest run"
   },
   "dependencies": {
