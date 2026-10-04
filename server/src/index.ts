@@ -6,6 +6,12 @@ const app = Fastify({
 
 const PORT = Number(process.env['PORT'] ?? 3000);
 
+app.get('/health', async () => {
+    return {
+        status: 'ok',
+    };
+});
+
 const start = async (): Promise<void> => {
     try {
         await app.listen({
