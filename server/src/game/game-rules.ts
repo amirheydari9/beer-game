@@ -41,3 +41,21 @@ export function calculatePlayerRound(input: PlayerRoundInput): PlayerRoundResult
         roundCost,
     };
 }
+
+export function createShipmentQueue(shipments: number[]): number[] {
+    return [...shipments];
+}
+
+export function advanceShipmentQueue(queue: number[], newShipment: number): { arrived: number; queue: number[] } {
+
+    const nextQueue = [...queue];
+
+    const arrived = nextQueue.shift() ?? 0;
+
+    nextQueue.push(newShipment);
+
+    return {
+        arrived,
+        queue: nextQueue,
+    };
+}
