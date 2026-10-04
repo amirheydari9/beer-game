@@ -15,6 +15,7 @@ const createInitialState = (): GameState => ({
             shipmentsInTransit: [...fixture.initial.shipmentsInTransit],
             lastOrderPlaced: fixture.initial.lastOrderPlaced,
             totalCost: 0,
+            joined:false
         },
         wholesaler: {
             role: 'wholesaler',
@@ -23,6 +24,7 @@ const createInitialState = (): GameState => ({
             shipmentsInTransit: [...fixture.initial.shipmentsInTransit],
             lastOrderPlaced: fixture.initial.lastOrderPlaced,
             totalCost: 0,
+            joined:false
         },
         distributor: {
             role: 'distributor',
@@ -31,6 +33,7 @@ const createInitialState = (): GameState => ({
             shipmentsInTransit: [...fixture.initial.shipmentsInTransit],
             lastOrderPlaced: fixture.initial.lastOrderPlaced,
             totalCost: 0,
+            joined:false
         },
         factory: {
             role: 'factory',
@@ -39,6 +42,7 @@ const createInitialState = (): GameState => ({
             shipmentsInTransit: [...fixture.initial.shipmentsInTransit],
             lastOrderPlaced: fixture.initial.lastOrderPlaced,
             totalCost: 0,
+            joined:false
         },
     },
 });

@@ -131,6 +131,7 @@ export class GameEngine {
                 ),
                 lastOrderPlaced: result.orderPlaced,
                 totalCost: result.totalCost,
+                joined:previous.joined
             };
         }
 
