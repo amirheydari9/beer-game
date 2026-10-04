@@ -119,5 +119,35 @@ describe('GameEngine', () => {
         ).toEqual([4, 0]);
     });
 
+    it('matches the fixture final state when everyone orders four', () => {
+        const engine = new GameEngine(createInitialState());
+
+        for (let round = 1; round <= 20; round++) {
+            engine.playRound({
+                orders: createOrders(),
+                customerDemand: round <= 4 ? 4 : 8,
+            });
+        }
+
+        const state = engine.getState();
+
+        expect(state.round).toBe(20);
+
+        expect(state.players.retailer.inventory).toBe(0);
+        expect(state.players.retailer.backlog).toBe(52);
+        expect(state.players.retailer.totalCost).toBe(394);
+
+        expect(state.players.wholesaler.inventory).toBe(12);
+        expect(state.players.wholesaler.backlog).toBe(0);
+        expect(state.players.wholesaler.totalCost).toBe(120);
+
+        expect(state.players.distributor.inventory).toBe(12);
+        expect(state.players.distributor.backlog).toBe(0);
+        expect(state.players.distributor.totalCost).toBe(120);
+
+        expect(state.players.factory.inventory).toBe(12);
+        expect(state.players.factory.backlog).toBe(0);
+        expect(state.players.factory.totalCost).toBe(120);
+    });
 
 });
