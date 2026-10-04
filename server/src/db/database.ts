@@ -9,6 +9,7 @@ export class AppDatabase {
         this.db = new Database(filename);
 
         this.db.pragma('journal_mode = WAL');
+        this.db.pragma('foreign_keys = ON');
 
         this.createTables();
     }
@@ -29,6 +30,8 @@ export class AppDatabase {
                 shipments_in_transit TEXT NOT NULL,
                 last_order_placed INTEGER NOT NULL,
                 total_cost REAL NOT NULL,
+                joined INTEGER NOT NULL DEFAULT 0,
+
 
                 PRIMARY KEY (game_id, role),
 

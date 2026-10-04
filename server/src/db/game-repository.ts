@@ -1,6 +1,10 @@
 import type {Role} from '@shared/types';
 
-import type {GameState, PlayerGameState} from '../game/game-state';
+import type {
+    GameState,
+    PlayerGameState,
+} from '../game/game-state';
+
 import {AppDatabase} from './database';
 
 const ROLES: Role[] = [
@@ -24,6 +28,7 @@ interface PlayerRow {
     shipments_in_transit: string;
     last_order_placed: number;
     total_cost: number;
+    joined: number;
 }
 
 export class GameRepository {
@@ -31,17 +36,16 @@ export class GameRepository {
         private readonly database: AppDatabase,
     ) {}
 
-
     findAll(): Array<{
         id: string;
         state: GameState;
     }> {
         const games = this.database.db
             .prepare(`
-            SELECT id
-            FROM games
-            ORDER BY created_at ASC
-        `)
+                SELECT id
+                FROM games
+                ORDER BY created_at ASC
+            `)
             .all() as Array<{
             id: string;
         }>;
@@ -93,9 +97,10 @@ export class GameRepository {
                             backlog,
                             shipments_in_transit,
                             last_order_placed,
-                            total_cost
+                            total_cost,
+                            joined
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         ON CONFLICT(game_id, role)
                         DO UPDATE SET
                             inventory =
@@ -107,7 +112,9 @@ export class GameRepository {
                             last_order_placed =
                                 excluded.last_order_placed,
                             total_cost =
-                                excluded.total_cost
+                                excluded.total_cost,
+                            joined =
+                                excluded.joined
                     `);
 
                 for (const role of ROLES) {
@@ -123,6 +130,7 @@ export class GameRepository {
                         ),
                         player.lastOrderPlaced,
                         player.totalCost,
+                        0,
                     );
                 }
             });
@@ -157,16 +165,15 @@ export class GameRepository {
                     backlog,
                     shipments_in_transit,
                     last_order_placed,
-                    total_cost
+                    total_cost,
+                    joined
                 FROM players
                 WHERE game_id = ?
             `)
             .all(id) as PlayerRow[];
 
-        const playerState = {} as Record<
-            Role,
-            PlayerGameState
-        >;
+        const playerState =
+            {} as Record<Role, PlayerGameState>;
 
         for (const player of players) {
             playerState[player.role] = {
@@ -179,7 +186,8 @@ export class GameRepository {
                     ) as number[],
                 lastOrderPlaced:
                 player.last_order_placed,
-                totalCost: player.total_cost,
+                totalCost:
+                player.total_cost,
             };
         }
 
