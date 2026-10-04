@@ -1,5 +1,7 @@
 import type {FastifyInstance} from 'fastify';
 
+import type {Role} from '@shared/types';
+
 import {
     GameService,
 } from '../game/game-service';
@@ -14,6 +16,15 @@ const ROLES = [
     'distributor',
     'factory',
 ] as const;
+
+const isRole = (
+    value: unknown,
+): value is Role => {
+    return (
+        typeof value === 'string' &&
+        ROLES.includes(value as Role)
+    );
+};
 
 const isNonNegativeInteger = (
     value: unknown,
@@ -68,6 +79,7 @@ export async function registerGameRoutes(
         return {
             id: game.id,
             state: game.getState(),
+            players: game.getPlayers(),
         };
     });
 
@@ -87,6 +99,46 @@ export async function registerGameRoutes(
         return {
             id: game.id,
             state: game.getState(),
+            players: game.getPlayers(),
+        };
+    });
+
+    app.post<{
+        Params: {
+            id: string;
+        };
+        Body: {
+            role: unknown;
+        };
+    }>('/games/:id/join', async (request, reply) => {
+        const game = gameService.getGame(request.params.id);
+
+        if (!game) {
+            return reply.code(404).send({
+                error: 'Game not found',
+            });
+        }
+
+        const role = request.body?.role;
+
+        if (!isRole(role)) {
+            return reply.code(400).send({
+                error: 'Invalid role',
+            });
+        }
+
+        if (game.hasPlayer(role)) {
+            return reply.code(409).send({
+                error: 'Role already joined',
+            });
+        }
+
+        game.join(role);
+
+        return {
+            gameId: game.id,
+            role,
+            players: game.getPlayers(),
         };
     });
 

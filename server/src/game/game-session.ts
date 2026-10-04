@@ -5,6 +5,7 @@ import {
     type RoundInput,
     type RoundResult,
 } from './game-engine';
+
 import type {GameState} from './game-state';
 
 export class GameSession {
@@ -12,7 +13,12 @@ export class GameSession {
 
     private readonly engine: GameEngine;
 
-    constructor(id: string, initialState: GameState) {
+    private readonly players = new Set<Role>();
+
+    constructor(
+        id: string,
+        initialState: GameState,
+    ) {
         this.id = id;
         this.engine = new GameEngine(initialState);
     }
@@ -23,6 +29,24 @@ export class GameSession {
 
     playRound(input: RoundInput): RoundResult {
         return this.engine.playRound(input);
+    }
+
+    join(role: Role): void {
+        if (this.players.has(role)) {
+            throw new Error(
+                `Role already joined: ${role}`,
+            );
+        }
+
+        this.players.add(role);
+    }
+
+    hasPlayer(role: Role): boolean {
+        return this.players.has(role);
+    }
+
+    getPlayers(): Role[] {
+        return [...this.players];
     }
 
     getPlayer(role: Role) {
