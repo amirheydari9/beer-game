@@ -104,6 +104,11 @@ export class GameSession {
     }
 
     playPendingRound(customerDemand: number): RoundResult {
+
+        if (this.engine.getState().round >= 20) {
+            throw new Error('Game is finished');
+        }
+
         if (!this.hasAllOrders()) {
             throw new Error(
                 'Not all players have placed their orders',
