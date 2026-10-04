@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-
+import {registerGameWebSocket} from './game/game-ws';
 import {GameService} from './game/game-service';
 import {registerGameRoutes} from './http/game-routes';
 
@@ -20,6 +20,9 @@ app.get('/health', async () => {
 const start = async (): Promise<void> => {
     try {
         await registerGameRoutes(app, gameService);
+
+        await registerGameRoutes(app, gameService);
+        registerGameWebSocket(app, gameService);
 
         await app.listen({
             port: PORT,
