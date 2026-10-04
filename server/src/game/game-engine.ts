@@ -15,15 +15,16 @@ export interface RoundInput {
     customerDemand: number;
 }
 
-export interface RoundPlayerResult extends PlayerRoundResult {
-    role: Role;
-    orderPlaced: number;
-    totalCost: number;
-}
-
 export interface RoundResult {
     round: number;
     players: Record<Role, RoundPlayerResult>;
+}
+
+export interface RoundPlayerResult extends PlayerRoundResult {
+    role: Role;
+    incomingOrder: number;
+    orderPlaced: number;
+    totalCost: number;
 }
 
 export class GameEngine {
@@ -65,7 +66,7 @@ export class GameEngine {
             const incomingOrder =
                 role === 'retailer'
                     ? input.customerDemand
-                    : this.getOrder(input.orders, this.getDownstreamRole(role));
+                    : this.getPlayer(this.getDownstreamRole(role),).lastOrderPlaced;
 
             const shipmentArrived = player.shipmentsInTransit[0] ?? 0;
 
@@ -81,6 +82,7 @@ export class GameEngine {
             players[role] = {
                 role,
                 ...result,
+                incomingOrder,
                 orderPlaced,
                 totalCost,
             };
@@ -125,7 +127,7 @@ export class GameEngine {
                 backlog: result.backlog,
                 shipmentsInTransit: this.advanceShipmentQueue(
                     previous.shipmentsInTransit,
-                    result.orderPlaced,
+                    this.getShipmentFor(role, results),
                 ),
                 lastOrderPlaced: result.orderPlaced,
                 totalCost: result.totalCost,
@@ -136,6 +138,25 @@ export class GameEngine {
             round,
             players,
         };
+    }
+
+    private getShipmentFor(
+        role: Role,
+        results: Record<Role, RoundPlayerResult>,
+    ): number {
+        if (role === 'retailer') {
+            return this.getRoundResult(results, 'wholesaler').shipped;
+        }
+
+        if (role === 'wholesaler') {
+            return this.getRoundResult(results, 'distributor').shipped;
+        }
+
+        if (role === 'distributor') {
+            return this.getRoundResult(results, 'factory').shipped;
+        }
+
+        return this.getRoundResult(results, 'factory').orderPlaced;
     }
 
     private advanceShipmentQueue(
