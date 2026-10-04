@@ -1,5 +1,5 @@
 import type {Role} from '@shared/types';
-
+import {DemandService} from './demand-service';
 import {GameSession} from './game-session';
 import type {GameState} from './game-state';
 
@@ -67,6 +67,7 @@ const createInitialState = (): GameState => ({
 
 export class GameService {
     private readonly sessions = new Map<string, GameSession>();
+    private readonly demandService = new DemandService();
 
     private readonly listeners =
         new Set<GameChangeListener>();
@@ -117,5 +118,93 @@ export class GameService {
         for (const listener of this.listeners) {
             listener(gameId, event);
         }
+    }
+
+    getCurrentDemand(gameId: string): number {
+        const game = this.getGame(gameId);
+
+        if (!game) {
+            throw new Error(
+                `Game not found: ${gameId}`,
+            );
+        }
+
+        return this.demandService.getDemand(
+            game.getState().round + 1,
+        );
+    }
+
+    joinPlayer(
+        gameId: string,
+        role: Role,
+    ): GameSession {
+        const game = this.getGame(gameId);
+
+        if (!game) {
+            throw new Error(
+                `Game not found: ${gameId}`,
+            );
+        }
+
+        game.join(role);
+
+        this.notifyGameChanged(
+            gameId,
+            {
+                type: 'player-joined',
+            },
+        );
+
+        return game;
+    }
+
+    placeOrder(
+        gameId: string,
+        role: Role,
+        quantity: number,
+    ): {
+        game: GameSession;
+        round: ReturnType<GameSession['playPendingRound']> | undefined;
+    } {
+        const game = this.getGame(gameId);
+
+        if (!game) {
+            throw new Error(
+                `Game not found: ${gameId}`,
+            );
+        }
+
+        game.placeOrder(role, quantity);
+
+        if (!game.hasAllOrders()) {
+            this.notifyGameChanged(
+                gameId,
+                {
+                    type: 'order-placed',
+                    orders: game.getPendingOrders(),
+                },
+            );
+
+            return {
+                game,
+                round: undefined,
+            };
+        }
+
+        const round = game.playPendingRound(
+            this.getCurrentDemand(gameId),
+        );
+
+        this.notifyGameChanged(
+            gameId,
+            {
+                type: 'round-played',
+            },
+        );
+
+        return {
+            game,
+            round,
+        };
     }
 }

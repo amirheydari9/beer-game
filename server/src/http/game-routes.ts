@@ -133,13 +133,9 @@ export async function registerGameRoutes(
             });
         }
 
-        game.join(role);
-
-        gameService.notifyGameChanged(
+        gameService.joinPlayer(
             game.id,
-            {
-                type: 'player-joined',
-            },
+            role,
         );
 
         return {
@@ -194,42 +190,28 @@ export async function registerGameRoutes(
             });
         }
 
-        game.placeOrder(role, quantity);
+        const result = gameService.placeOrder(
+            game.id,
+            role,
+            quantity,
+        );
 
-        if (!game.hasAllOrders()) {
-            gameService.notifyGameChanged(
-                game.id,
-                {
-                    type: 'order-placed',
-                    orders: game.getPendingOrders(),
-                },
-            );
-
+        if (!result.round) {
             return {
                 gameId: game.id,
                 role,
                 quantity,
-                orders: game.getPendingOrders(),
+                orders: result.game.getPendingOrders(),
                 allOrdersPlaced: false,
             };
         }
 
-        const result = game.playPendingRound(
-            game.getState().round < 4 ? 4 : 8,
-        );
-
-        gameService.notifyGameChanged(
-            game.id,
-            {
-                type: 'round-played',
-            },
-        );
         return {
             gameId: game.id,
             role,
             quantity,
             allOrdersPlaced: true,
-            round: result,
+            round: result.round,
         };
     });
 
