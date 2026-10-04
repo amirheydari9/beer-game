@@ -1,6 +1,12 @@
 import type {FastifyInstance} from 'fastify';
 
-import {GameService} from '../game/game-service';
+import {
+    GameService,
+} from '../game/game-service';
+
+import type {
+    RoundInput,
+} from '../game/game-engine';
 
 export async function registerGameRoutes(
     app: FastifyInstance,
@@ -32,5 +38,24 @@ export async function registerGameRoutes(
             id: game.id,
             state: game.getState(),
         };
+    });
+
+    app.post<{
+        Params: {
+            id: string;
+        };
+        Body: RoundInput;
+    }>('/games/:id/rounds', async (request, reply) => {
+        const game = gameService.getGame(request.params.id);
+
+        if (!game) {
+            return reply.code(404).send({
+                error: 'Game not found',
+            });
+        }
+
+        const result = game.playRound(request.body);
+
+        return result;
     });
 }
