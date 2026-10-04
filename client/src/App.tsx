@@ -18,12 +18,29 @@ interface Game {
     players: Role[];
 }
 
+interface Player {
+    role: Role;
+    inventory: number;
+    backlog: number;
+    shipmentsInTransit: number[];
+    lastOrderPlaced: number;
+    totalCost: number;
+}
+
+interface GameState {
+    round: number;
+    players: Record<Role, Player>;
+}
+
 export default function App() {
     const [game, setGame] = useState<Game | null>(null);
+    const [state, setState] = useState<GameState | null>(null);
     const [roomId, setRoomId] = useState('');
     const [role, setRole] = useState<Role | null>(null);
+    const [order, setOrder] = useState('4');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [submitted, setSubmitted] = useState(false);
 
     useEffect(() => {
         if (!game) {
@@ -37,6 +54,10 @@ export default function App() {
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
 
+            if (data.state) {
+                setState(data.state);
+            }
+
             if (data.players) {
                 setGame((current) =>
                     current
@@ -46,6 +67,10 @@ export default function App() {
                         }
                         : current,
                 );
+            }
+
+            if (data.type === 'round-played') {
+                setSubmitted(false);
             }
         };
 
@@ -69,6 +94,7 @@ export default function App() {
 
             setGame(data);
             setRoomId(data.id);
+            setState(data.state);
         } catch {
             setError('Could not create game');
         } finally {
@@ -96,6 +122,7 @@ export default function App() {
             const data = await response.json();
 
             setGame(data);
+            setState(data.state);
         } catch {
             setError('Game not found');
         } finally {
@@ -148,6 +175,134 @@ export default function App() {
         }
     };
 
+    const submitOrder = async () => {
+        if (!game || !role) {
+            return;
+        }
+
+        const quantity = Number(order);
+
+        if (!Number.isInteger(quantity) || quantity < 0) {
+            setError('Order must be a non-negative integer');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            const response = await fetch(
+                `${API_URL}/games/${game.id}/orders`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        role,
+                        quantity,
+                    }),
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error();
+            }
+
+            setSubmitted(true);
+        } catch {
+            setError('Could not place order');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (game && role && state) {
+        const player = state.players[role];
+
+        return (
+            <main>
+                <h1>Beer Game</h1>
+
+                <p>
+                    Room: <strong>{game.id}</strong>
+                </p>
+
+                <h2>
+                    Round {state.round}
+                </h2>
+
+                <p>
+                    Role: <strong>{role}</strong>
+                </p>
+
+                <hr />
+
+                <p>
+                    Inventory: {player.inventory}
+                </p>
+
+                <p>
+                    Backlog: {player.backlog}
+                </p>
+
+                <p>
+                    Shipment arrived:{' '}
+                    {player.shipmentsInTransit[0] ?? 0}
+                </p>
+
+                <p>
+                    Last order:{' '}
+                    {player.lastOrderPlaced}
+                </p>
+
+                <p>
+                    Cost so far:{' '}
+                    {player.totalCost}
+                </p>
+
+                <hr />
+
+                <label>
+                    Order:{' '}
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={order}
+                        onChange={(event) =>
+                            setOrder(event.target.value)
+                        }
+                        disabled={submitted || loading}
+                    />
+                </label>
+
+                <button
+                    type="button"
+                    onClick={submitOrder}
+                    disabled={submitted || loading}
+                >
+                    {submitted
+                        ? 'Order submitted'
+                        : 'Submit Order'}
+                </button>
+
+                <p>
+                    Players:{' '}
+                    {game.players.length} / 4
+                </p>
+
+                {submitted && (
+                    <p>
+                        Waiting for other players...
+                    </p>
+                )}
+
+                {error && <p>{error}</p>}
+            </main>
+        );
+    }
+
     return (
         <main>
             <h1>Beer Game</h1>
@@ -182,10 +337,11 @@ export default function App() {
                 </>
             )}
 
-            {game && (
+            {game && !role && (
                 <>
                     <p>
-                        Room: <strong>{game.id}</strong>
+                        Room:{' '}
+                        <strong>{game.id}</strong>
                     </p>
 
                     <h2>Choose your role</h2>
@@ -199,9 +355,7 @@ export default function App() {
                                 key={item}
                                 type="button"
                                 disabled={
-                                    taken ||
-                                    loading ||
-                                    role !== null
+                                    taken || loading
                                 }
                                 onClick={() =>
                                     joinGame(item)
@@ -213,32 +367,14 @@ export default function App() {
                         );
                     })}
 
-                    {role && (
-                        <p>
-                            You are playing as:{' '}
-                            <strong>{role}</strong>
-                        </p>
-                    )}
-
                     <p>
-                        Players: {game.players.length} / 4
+                        Players:{' '}
+                        {game.players.length} / 4
                     </p>
 
-                    {game.players.length < 4 && (
-                        <p>
-                            Waiting for other players...
-                        </p>
-                    )}
-
-                    {game.players.length === 4 && (
-                        <p>
-                            Game is ready!
-                        </p>
-                    )}
+                    {error && <p>{error}</p>}
                 </>
             )}
-
-            {error && <p>{error}</p>}
         </main>
     );
 }
