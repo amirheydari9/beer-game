@@ -10,6 +10,10 @@ const ROLES: Role[] = [
     'factory',
 ];
 
+type GameChangeListener = (
+    gameId: string,
+) => void;
+
 const createInitialState = (): GameState => ({
     round: 0,
     players: {
@@ -51,6 +55,9 @@ const createInitialState = (): GameState => ({
 export class GameService {
     private readonly sessions = new Map<string, GameSession>();
 
+    private readonly listeners =
+        new Set<GameChangeListener>();
+
     createGame(): GameSession {
         const id = crypto.randomUUID();
 
@@ -78,5 +85,21 @@ export class GameService {
 
     getRoles(): Role[] {
         return [...ROLES];
+    }
+
+    onGameChanged(
+        listener: GameChangeListener,
+    ): () => void {
+        this.listeners.add(listener);
+
+        return () => {
+            this.listeners.delete(listener);
+        };
+    }
+
+    notifyGameChanged(gameId: string): void {
+        for (const listener of this.listeners) {
+            listener(gameId);
+        }
     }
 }

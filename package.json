@@ -10,7 +10,7 @@
     "dev": "echo 'TODO: start the server and the client for local development' && exit 1",
     "build": "echo 'TODO: produce a production build' && exit 1",
     "start": "echo 'TODO: run the production build' && exit 1",
-    "test": "echo 'TODO: run the automated tests' && exit 1"
+    "test": "vitest run"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.0",
