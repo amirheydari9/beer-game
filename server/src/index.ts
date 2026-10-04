@@ -1,7 +1,8 @@
 import Fastify from 'fastify';
-import {registerGameWebSocket} from './game/game-ws';
+
 import {GameService} from './game/game-service';
 import {registerGameRoutes} from './http/game-routes';
+import {registerGameWebSocket} from './game/game-ws';
 
 const app = Fastify({
     logger: true,
@@ -11,17 +12,17 @@ const PORT = Number(process.env['PORT'] ?? 3000);
 
 const gameService = new GameService();
 
-app.get('/health', async () => {
-    return {
-        status: 'ok',
-    };
-});
-
 const start = async (): Promise<void> => {
     try {
-        await registerGameRoutes(app, gameService);
+        await registerGameRoutes(
+            app,
+            gameService,
+        );
 
-        registerGameWebSocket(app, gameService);
+        registerGameWebSocket(
+            app,
+            gameService,
+        );
 
         await app.listen({
             port: PORT,
@@ -32,5 +33,18 @@ const start = async (): Promise<void> => {
         process.exit(1);
     }
 };
+
+const shutdown = async (): Promise<void> => {
+    gameService.close();
+    await app.close();
+};
+
+process.on('SIGINT', () => {
+    void shutdown();
+});
+
+process.on('SIGTERM', () => {
+    void shutdown();
+});
 
 void start();
