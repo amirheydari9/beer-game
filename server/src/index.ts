@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-
+import cors from '@fastify/cors';
 import {GameService} from './game/game-service';
 import {registerGameRoutes} from './http/game-routes';
 import {registerGameWebSocket} from './game/game-ws';
@@ -14,6 +14,11 @@ const gameService = new GameService();
 
 const start = async (): Promise<void> => {
     try {
+
+        await app.register(cors, {
+            origin: true,
+        });
+
         await registerGameRoutes(
             app,
             gameService,
