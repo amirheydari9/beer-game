@@ -1,6 +1,8 @@
 import type {Role} from '@shared/types';
 import {DemandService} from './demand-service';
 import {GameSession} from './game-session';
+import {AppDatabase} from '../db/database';
+import {GameRepository} from '../db/game-repository';
 import type {GameState} from './game-state';
 
 const ROLES: Role[] = [
@@ -68,29 +70,70 @@ const createInitialState = (): GameState => ({
 export class GameService {
     private readonly sessions = new Map<string, GameSession>();
     private readonly demandService = new DemandService();
-
+    private readonly database: AppDatabase;
+    private readonly repository: GameRepository;
     private readonly listeners =
         new Set<GameChangeListener>();
+
+    constructor() {
+        this.database = new AppDatabase();
+        this.repository = new GameRepository(this.database);
+    }
 
     createGame(): GameSession {
         const id = crypto.randomUUID();
 
+        const state = createInitialState();
+
         const session = new GameSession(
             id,
-            createInitialState(),
+            state,
         );
 
-        this.sessions.set(id, session);
+        this.repository.save(
+            id,
+            state,
+        );
+
+        this.sessions.set(
+            id,
+            session,
+        );
 
         return session;
     }
 
     getGame(id: string): GameSession | undefined {
-        return this.sessions.get(id);
+        const existing =
+            this.sessions.get(id);
+
+        if (existing) {
+            return existing;
+        }
+
+        const state =
+            this.repository.findById(id);
+
+        if (!state) {
+            return undefined;
+        }
+
+        const session = new GameSession(
+            id,
+            state,
+        );
+
+        this.sessions.set(
+            id,
+            session,
+        );
+
+        return session;
     }
 
     deleteGame(id: string): boolean {
-        return this.sessions.delete(id);
+        this.sessions.delete(id);
+        return this.repository.delete(id);
     }
 
     listGames(): GameSession[] {
@@ -148,6 +191,11 @@ export class GameService {
 
         game.join(role);
 
+        this.repository.save(
+            gameId,
+            game.getState(),
+        );
+
         this.notifyGameChanged(
             gameId,
             {
@@ -193,6 +241,11 @@ export class GameService {
 
         const round = game.playPendingRound(
             this.getCurrentDemand(gameId),
+        );
+
+        this.repository.save(
+            gameId,
+            game.getState(),
         );
 
         this.notifyGameChanged(
