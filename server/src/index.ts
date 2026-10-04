@@ -21,7 +21,6 @@ const start = async (): Promise<void> => {
     try {
         await registerGameRoutes(app, gameService);
 
-        await registerGameRoutes(app, gameService);
         registerGameWebSocket(app, gameService);
 
         await app.listen({
