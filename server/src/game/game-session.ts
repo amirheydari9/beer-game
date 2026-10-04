@@ -19,6 +19,12 @@ export class GameSession {
     constructor(id: string, initialState: GameState) {
         this.id = id;
         this.engine = new GameEngine(initialState);
+
+        for (const role of Object.keys(initialState.players) as Role[]) {
+            if (initialState.players[role]?.joined) {
+                this.players.add(role);
+            }
+        }
     }
 
     getState(): GameState {

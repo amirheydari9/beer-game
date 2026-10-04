@@ -75,9 +75,9 @@ export class GameService {
     private readonly listeners =
         new Set<GameChangeListener>();
 
-    constructor() {
-        this.database = new AppDatabase();
-        this.repository = new GameRepository(this.database);
+    constructor(database = new AppDatabase()) {
+        this.database = database;
+        this.repository = new GameRepository(database);
     }
 
     createGame(): GameSession {

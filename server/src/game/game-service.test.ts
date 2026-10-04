@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-
+import {AppDatabase} from '../db/database';
 import {GameService} from './game-service';
 
 describe('GameService', () => {
@@ -44,4 +44,34 @@ describe('GameService', () => {
         expect(first.id).not.toBe(second.id);
         expect(first).not.toBe(second);
     });
-});
+
+    it('persists joined players', () => {
+        const database = new AppDatabase(':memory:');
+
+        const service = new GameService(database);
+
+        const game = service.createGame();
+
+        service.joinPlayer(
+            game.id,
+            'retailer',
+        );
+
+        const reloadedService =
+            new GameService(database);
+
+        const reloadedGame =
+            reloadedService.getGame(game.id);
+
+        expect(reloadedGame).toBeDefined();
+
+        expect(
+            reloadedGame?.getState().players.retailer.joined,
+        ).toBe(true);
+
+        expect(
+            reloadedGame?.hasPlayer('retailer'),
+        ).toBe(true);
+
+        database.close();
+    });});
