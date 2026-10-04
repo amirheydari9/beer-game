@@ -8,38 +8,44 @@ const createInitialState = (): GameState => ({
     players: {
         retailer: {
             role: 'retailer',
+            joined: false,
             inventory: 12,
             backlog: 0,
             shipmentsInTransit: [4, 4],
             lastOrderPlaced: 4,
             totalCost: 0,
         },
+
         wholesaler: {
             role: 'wholesaler',
+            joined: false,
             inventory: 12,
             backlog: 0,
             shipmentsInTransit: [4, 4],
             lastOrderPlaced: 4,
             totalCost: 0,
         },
+
         distributor: {
             role: 'distributor',
+            joined: false,
             inventory: 12,
             backlog: 0,
             shipmentsInTransit: [4, 4],
             lastOrderPlaced: 4,
             totalCost: 0,
         },
+
         factory: {
             role: 'factory',
+            joined: false,
             inventory: 12,
             backlog: 0,
             shipmentsInTransit: [4, 4],
             lastOrderPlaced: 4,
             totalCost: 0,
         },
-    },
-});
+    },});
 
 const createOrders = (
     retailer = 4,

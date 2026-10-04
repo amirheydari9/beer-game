@@ -37,6 +37,16 @@ export class GameSession {
         }
 
         this.players.add(role);
+
+        const player = this.engine.getState().players[role];
+
+        if (!player) {
+            throw new Error(
+                `Player state not found for role: ${role}`,
+            );
+        }
+
+        player.joined = true;
     }
 
     hasPlayer(role: Role): boolean {

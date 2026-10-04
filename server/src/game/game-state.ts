@@ -1,7 +1,8 @@
-import {Role} from "@shared/types";
+import type {Role} from '@shared/types';
 
 export interface PlayerGameState {
     role: Role;
+    joined: boolean;
     inventory: number;
     backlog: number;
     shipmentsInTransit: number[];
