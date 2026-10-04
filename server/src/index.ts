@@ -1,10 +1,15 @@
 import Fastify from 'fastify';
 
+import {GameService} from './game/game-service';
+import {registerGameRoutes} from './http/game-routes';
+
 const app = Fastify({
     logger: true,
 });
 
 const PORT = Number(process.env['PORT'] ?? 3000);
+
+const gameService = new GameService();
 
 app.get('/health', async () => {
     return {
@@ -14,6 +19,8 @@ app.get('/health', async () => {
 
 const start = async (): Promise<void> => {
     try {
+        await registerGameRoutes(app, gameService);
+
         await app.listen({
             port: PORT,
             host: '0.0.0.0',
