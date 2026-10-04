@@ -281,4 +281,8 @@ export class GameService {
             round,
         };
     }
+
+    close(): void {
+        this.database.close();
+    }
 }
